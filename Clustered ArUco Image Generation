@@ -1,0 +1,41 @@
+import matplotlib
+import matplotlib.pyplot as plt
+import cv2
+from cv2 import aruco
+from random import randint
+from PIL import Image
+
+# generation of the image
+dictionary = aruco.Dictionary_get(aruco.DICT_4X4_250)
+
+# fig, axes = plt.subplots(2,5)
+# for i in range(0,10):
+# 	img.append()
+# 	# plt.imshow(img[i], cmap = matplotlib.cm.gray, interpolation = "nearest")
+	# plt.axis('off')
+# plt.show()
+
+
+
+
+
+angles = [0, 90, 180, 270]
+
+def rotation(image):
+	img = Image.open(image)
+	angle1 = angles[randint(0,3)]
+	rotated_img1 = img.rotate(angle)
+	return angle1, rotated_img1
+
+fig, ax = plt.subplots(5,5)
+i = 0
+for row in ax:
+    for col in row:
+    	image_of_marker = aruco.drawMarker(dictionary,i, 200,1)
+    	if (i == 10):
+	    	angle, rotated_img = rotation(image_of_marker)
+    		col.imshow(rotated_img, cmap = matplotlib.cm.gray, interpolation = "nearest")
+    	col.imshow(image_of_marker, cmap = matplotlib.cm.gray, interpolation = "nearest")
+    	col.axis('off')
+    	i = i +1
+plt.show()
