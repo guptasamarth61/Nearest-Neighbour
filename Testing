@@ -1,0 +1,93 @@
+ids = []
+edge_bo = []
+edge_og = []
+edge_gr = []
+edge_rb = []
+for x in marker_id:
+	marker_to_compute = x
+	k = marker_id.index(marker_to_compute)
+	m1, dist1 = nearest_marker(corner_1, corner_2)
+	m2, dist2 = nearest_marker(corner_2, corner_3)
+	m3, dist3 = nearest_marker(corner_3, corner_4)
+	m4, dist4 = nearest_marker(corner_4, corner_1)
+	if (m1 == m3):
+		if (min(dist1) < min(dist3)):
+			m3 = 1000
+		elif(min(dist1) == min(dist3)):
+			m1 = 1000
+			m3 = 1000
+		else:
+			m1 = 1000
+	if (m2 == m4):
+		if (min(dist2) < min(dist4)):
+			m4 = 1000
+		elif(min(dist2) == min(dist4)):
+			m2 = 1000
+			m4 = 1000
+		else:
+			m2 = 1000
+	ids.append(x)
+	edge_bo.append(m1)
+	edge_og.append(m2)
+	edge_gr.append(m3)
+	edge_rb.append(m4)
+# dictionary = {"Ids": ids, "BO": edge_bo, "OG": edge_og, "GR": edge_gr, "RB": edge_rb, "Angle": rotation_angle[::-1]}
+# df = pd.DataFrame(dictionary)
+# df = df.set_index("Ids")
+# print("\n", df)
+# print(df.loc[1])
+
+# print(im1)
+# print(edge_bo[::-1])
+# print("\n")
+# print(im2)
+# print(edge_og[::-1])
+# print("\n")
+# print(im3)
+# print(edge_gr[::-1])
+# print("\n")
+# print(im4)
+# print(edge_rb[::-1])
+# plt.show()
+
+edge_bo = edge_bo[::-1]
+edge_og = edge_og[::-1]
+edge_gr = edge_gr[::-1]
+edge_rb = edge_rb[::-1]
+mark_test_1 = []
+mark_test_2 = []
+mark_test_3 = []
+mark_test_4 = []
+
+for i in range(0, len(im1)):
+	if (edge_bo[i] != 1000):
+		if (edge_bo[i] == im1[i]):
+			mark_test_1.append("True")
+		else:
+			mark_test_1.append("False")
+	if (edge_og[i] != 1000):
+		if (edge_og[i] == im2[i]):
+			mark_test_2.append("True")
+		else:
+			mark_test_2.append("False")
+	if (edge_gr[i] != 1000):
+		if (edge_gr[i] == im3[i]):
+			mark_test_3.append("True")
+		else:
+			mark_test_3.append("False")
+	if (edge_rb[i] != 1000):
+		if (edge_rb[i] == im4[i]):
+			mark_test_4.append("True")
+		else:
+			mark_test_4.append("False")
+
+print("\n1. Matching of Blue Orange Edge", mark_test_1)
+print("\n2. Matching of Orange Green Edge", mark_test_2)
+print("\n3. Matching of Green Red Edge", mark_test_3)
+print("\n4. Matching of Red Blue Edge", mark_test_4)
+print("\nAny Blue Orange Edge Mismatch found:", any(x == 'False' for x in mark_test_1))
+print("Any Orange Green Edge Mismatch found:", any(x == 'False' for x in mark_test_2))
+print("Any Green Red Edge Mismatch found:", any(x == 'False' for x in mark_test_3))
+print("Any Red Blue Edge Mismatch found:", any(x == 'False' for x in mark_test_4))
+
+# plt.show()
