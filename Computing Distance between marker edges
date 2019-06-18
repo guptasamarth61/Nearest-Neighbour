@@ -1,0 +1,155 @@
+def calculate_distance(a, alpha, b1, beta1):
+	beta = beta1 - alpha
+	b = b1 - a
+	beta_squared = (np.linalg.norm(beta)**2)
+	p = np.dot(b, beta)/beta_squared
+	q = np.dot((alpha - a), beta)/beta_squared
+	A = np.linalg.norm(p*beta - b)
+	B = np.linalg.norm(alpha - a - q*beta)
+	C = np.dot(((p*beta - b)), (alpha - a - q*beta))
+	t1 = q/p
+	t2 = (1+q)/p
+	# print(t1)
+	# print(t2)
+	distance = 0
+	if((t1<=0) and (t2<=0)):
+		distance = (np.linalg.norm(alpha - a))**2 + (np.linalg.norm(b)**2)/3 + np.dot((alpha-a),b)
+	elif((t1>=1) and (t2>=1)):
+		distance = (np.linalg.norm(alpha-a+beta)**2) + (np.linalg.norm(b)**2)/3 + (np.dot(b, (alpha-a+beta)))
+
+	elif((t1<=0) and (t2>=1)):
+		distance = (A**2)/3 + (B**2) + C
+	elif((t1>=1) and (t2<=0)):
+		distance = (A**2)/3 + (B**2) + C
+
+	elif((1>=t1>=0) and (0<=t2<=1)):
+		distance = t1*(np.linalg.norm(alpha - a))**2 + ((t1**3)*(np.linalg.norm(b)**2))/3 + (t1**2)*np.dot((alpha-a),b)
+		distance = distance + (1-t2)*(np.linalg.norm(alpha-a+beta)**2) + ((1-t2**2)/3)*(np.linalg.norm(b)**2) + (1-t2**2)*np.dot(b, (alpha-a+beta))
+		distance = distance + (A**2)*(t2**3-t1**3)/3 + (B**2)*(t2-t1) + C*(t2**2 - t1**2)
+	elif((t1<=0) and (0<=t2<=1)):
+		distance = (A**2)*(t2**3)/3 + (B**2)*(t2) + C*(t2**2)
+		distance = distance + (1-t2)*(np.linalg.norm(alpha-a+beta)**2) + ((1-t2**2)/3)*(np.linalg.norm(b)**2) + (1-t2**2)*np.dot(b, (alpha-a+beta))
+	elif((1>=t1>=0) and (t2>=1)):
+		distance = (A**2)*(1-t1**3)/3 + (B**2)*(1-t1) + C*(1 - t1**2)
+		distance = distance + t1*(np.linalg.norm(alpha - a))**2 + ((t1**3)*(np.linalg.norm(b)**2))/3 + (t1**2)*np.dot((alpha-a),b)
+	
+	
+	elif((0<=t1<=1) and (t2<=0)):
+		distance = (A**2)*(t1**3)/3 + (B**2)*(t1) + C*(t1**2)
+		distance = distance + (1-t1)*((np.linalg.norm(alpha - a))**2) + ((1 - (t1**3))*(np.linalg.norm(b)**2))/3 + (1-(t1**2))*np.dot((alpha-a),b)
+	elif((t1>=1) and (0<=t2<=1)):
+		distance = (t2)*(np.linalg.norm(alpha-a+beta)**2) + ((t2**2)/3)*(np.linalg.norm(b)**2) + (t2**2)*np.dot(b, (alpha-a+beta))
+		distance = distance + (A**2)*(1-t2**3)/3 + (B**2)*(1-t2) + C*(1 - t2**2)
+	distance = (distance)**0.5
+	return distance
+
+ids = id()
+
+def compute_distance(k, pos1, pos2):
+	corners = [corner_1, corner_2, corner_3, corner_4]
+	edge_1_k = corners[pos1][k]
+	edge_2_k = corners[pos2][k]
+	corner_1.pop(k)
+	corner_2.pop(k)
+	corner_3.pop(k)
+	corner_4.pop(k)
+	ids1 = ids
+	ids1.pop(k)
+
+	d_average = np.zeros([len(corner_1),4])
+	d_min = np.zeros([len(corner_1),4])
+	d_max = np.zeros([len(corner_1),4])
+
+	for i in range(0, len(corner_1)):
+		marker = [corner_1[i], corner_2[i], corner_3[i], corner_4[i]]
+		for j in range(0,3):
+			d1 = calculate_distance(np.asarray(edge_1_k), np.asarray(marker[j]), np.asarray(edge_2_k), np.asarray(marker[j+1]))
+			d2 = calculate_distance(np.asarray(marker[j]), np.asarray(edge_1_k), np.asarray(marker[j+1]), np.asarray(edge_2_k))
+			d_average[i][j] = (d1+d2)/2
+			d_max[i][j] = max(d1,d2)
+			d_min[i][j] = min(d1,d2)
+		d1 = calculate_distance(np.asarray(edge_1_k), np.asarray(marker[3]), np.asarray(edge_2_k), np.asarray(marker[0]))
+		d2 = calculate_distance(np.asarray(marker[0]), np.asarray(edge_1_k), np.asarray(marker[3]), np.asarray(edge_2_k))
+		d_average[i][3] = (d1+d2)/2
+		d_max[i][3] = max(d1,d2)
+		d_min[i][3] = min(d1,d2)
+	return d_average, d_min, d_max, ids1
+
+
+def closest_marker_average(d_average1, ids3):
+	min_list = [d_average1[:,0].tolist(), d_average1[:,1].tolist(), d_average1[:,2].tolist(), d_average1[:,3].tolist()]
+	min_value = []
+	for x in min_list:
+		min_value.append(min(x))
+	index = min_value.index(min(min_value))
+	final_index = min_list[index].index(min(min_list[index])) 
+	edge_colors = ["blue orange", "orange green", "green red", "red blue"]
+	return(ids3[final_index], edge_colors[index])
+
+def closest_marker_minimum(d_min1, ids3):
+	min_list = [d_min1[:,0].tolist(), d_min1[:,1].tolist(), d_min1[:,2].tolist(), d_min1[:,3].tolist()]
+	min_value = []
+	for x in min_list:
+		min_value.append(min(x))
+	index = min_value.index(min(min_value))
+	final_index = min_list[index].index(min(min_list[index])) 
+	edge_colors = ["blue orange", "orange green", "green red", "red blue"]
+	return(ids3[final_index], edge_colors[index])
+
+def closest_marker_maximum(d_max1, ids3):
+	min_list = [d_max1[:,0].tolist(), d_max1[:,1].tolist(), d_max1[:,2].tolist(), d_max1[:,3].tolist()]
+	min_value = []
+	for x in min_list:
+		min_value.append(min(x))
+	index = min_value.index(min(min_value))
+	final_index = min_list[index].index(min(min_list[index])) 
+	edge_colors = ["blue orange", "orange green", "green red", "red blue"]
+	return(ids3[final_index])
+
+average_bo = []
+for m in [9,10,11,16,17,18,21,22,23,24,29]:
+	d_average2, d_min2, d_max2, ids2 = compute_distance(ids.index(m), 0, 1)
+	average_bo.append(closest_marker_average(d_average2, ids2))
+	# minimum.append(closest_marker_minimum(d_min2, ids2))
+	# maximum.append(closest_marker_maximum(d_max2, ids2))
+
+ids = id()
+df_x, df_y, df_x_mean, df_y_mean, corner_1, corner_2, corner_3, corner_4, marker_ids = compute_corners("proj_1.jpg")
+corner_1 = corner_1.tolist()
+corner_2 = corner_2.tolist()
+corner_3 = corner_3.tolist()
+corner_4 = corner_4.tolist()
+average_og = []
+for m in [9,10,11,16,17,18,21,22,23,24,29]:
+	d_average3, d_min3, d_max3, ids3 = compute_distance(ids.index(m), 1, 2)
+	average_og.append(closest_marker_average(d_average3, ids3))
+
+
+ids = id()
+df_x, df_y, df_x_mean, df_y_mean, corner_1, corner_2, corner_3, corner_4, marker_ids = compute_corners("proj_1.jpg")
+corner_1 = corner_1.tolist()
+corner_2 = corner_2.tolist()
+corner_3 = corner_3.tolist()
+corner_4 = corner_4.tolist()
+average_gr = []
+for m in [9,10,11,16,17,18,21,22,23,24,29]:
+	d_average4, d_min4, d_max4, ids4 = compute_distance(ids.index(m), 2, 3)
+	average_gr.append(closest_marker_average(d_average4, ids4))
+
+ids = id()
+df_x, df_y, df_x_mean, df_y_mean, corner_1, corner_2, corner_3, corner_4, marker_ids = compute_corners("proj_1.jpg")
+corner_1 = corner_1.tolist()
+corner_2 = corner_2.tolist()
+corner_3 = corner_3.tolist()
+corner_4 = corner_4.tolist()
+average_rb = []
+for m in [9,10,11,16,17,18,21,22,23,24,29]:
+	d_average5, d_min5, d_max5, ids5 = compute_distance(ids.index(m), 3, 0)
+	average_rb.append(closest_marker_average(d_average5, ids5))
+
+# print(average_bo)
+# print(average_og)
+# print(average_gr)
+# print(average_rb)
+# plt.show()
+
