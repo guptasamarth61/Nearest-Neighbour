@@ -1,0 +1,235 @@
+import cv2
+from cv2 import aruco
+import matplotlib
+import matplotlib.pyplot as plt
+import random
+import numpy as np
+import pandas as pd
+
+y = []
+for i in range(0, 250):
+	y.append(i)
+aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)
+
+def initial_markers():
+	im1 = np.zeros(len(y))
+	im2 = np.zeros(len(y))
+	im3 = np.zeros(len(y))
+	im4 = np.zeros(len(y))
+
+	for i in range(5, len(y)-5):
+		im1[i] = (y[i-5])
+		im2[i] = (y[i+1])
+		im3[i] = (y[i+5])
+		im4[i] = (y[i-1])
+
+	for i in range(1,5):
+		im1[i] = 1000
+		im2[i] = (y[i+1])
+		im3[i] = (y[i+5])
+		im4[i] = (y[i-1])
+
+	# for id = 0
+	im1[0] = 1000
+	im2[0] = (y[1])
+	im3[0] = (y[5])
+	im4[0] = 1000
+
+	for i in range(len(y)-5, len(y)-1):
+		im1[i] = (y[i-5])
+		im2[i] = (y[i+1])
+		im3[i] = 1000
+		im4[i] = (y[i-1])
+
+	# for the last marker
+	i = len(y)-1
+	im1[i] = (y[i-5])
+	im2[i] = 1000
+	im3[i] = 1000
+	im4[i] = (y[i-1])
+
+	# for the og edge
+	for i in range(4,25,5):
+		im2[i] = 1000
+
+	#for the rb edge
+	for i in range(0,21, 5):
+		im4[i] = 1000
+
+	im1 = im1.tolist()
+	im2 = im2.tolist()
+	im3 = im3.tolist()
+	im4 = im4.tolist()
+
+	return im1, im2, im3, im4
+
+initial_m1, initial_m2, initial_m3, initial_m4 = initial_markers()
+
+def compute_corners(image):
+	test_pic = cv2.imread(image)
+	#plt.imshow(test_pic)
+	#plt.show()
+
+	#converting image to greyish scale
+	test_gray = cv2.cvtColor(test_pic, cv2.COLOR_RGB2GRAY)
+	plt.imshow(test_gray)
+	#plt.show()
+	markercorners, markerids, rejected_img_points = aruco.detectMarkers(test_gray, aruco_dict, parameters = aruco.DetectorParameters_create())
+	# print(markerids[1])
+	# print(markercorners[1][0])
+	#print(rejected_img_points)
+
+	test_with_markers = aruco.drawDetectedMarkers(test_pic, markercorners, markerids)
+	plt.imshow(test_with_markers)
+	#plt.show()
+	length = len(markerids)
+	corner1 = []
+	corner2 = []
+	corner3 = []
+	corner4 = []
+
+	markercorners = np.asarray(markercorners)
+	for i in range(0, length):
+	 	corner1.append(markercorners[i][0][0])
+	 	corner2.append(markercorners[i][0][1])
+	 	corner3.append(markercorners[i][0][2])
+	 	corner4.append(markercorners[i][0][3])
+
+	corner1 = np.asarray(corner1)
+	corner2 = np.asarray(corner2)
+	corner3 = np.asarray(corner3)
+	corner4 = np.asarray(corner4)
+	# print(corner1[0])
+	values_dict_x = {"Corner 1 x": corner1[:,0],  "Corner 2 x": corner2[:,0],  "Corner 3 x": corner3[:,0], 
+					"Corner 4 x": corner4[:,0], "ID": markerids[:,0]}
+	values_dict_y = {"Corner 1 y": corner1[:,1],"Corner 2 y": corner2[:,1],"Corner 3 y": corner3[:,1],"Corner 4 y": corner4[:,1], 
+					"ID": markerids[:,0]}
+	df_x1 = pd.DataFrame(values_dict_x)
+	df_y1 = pd.DataFrame(values_dict_y)
+	df_x1 = df_x1.set_index("ID")
+	df_y1 = df_y1.set_index("ID")
+	df_x1_mean = df_x1.mean(axis = 1)
+	df_y1_mean = df_y1.mean(axis = 1)
+	return df_x1, df_y1, df_x1_mean, df_y1_mean, corner1, corner2, corner3, corner4, markerids
+
+
+df_x, df_y, df_x_mean, df_y_mean, corner_1, corner_2, corner_3, corner_4, marker_ids = compute_corners("IMG_0006.JPG")
+# print(marker_ids.tolist())
+# plt.scatter(np.asarray(df_x_mean), np.asarray(df_y_mean))
+# plt.show()
+
+corner_1 = corner_1.tolist()
+corner_2 = corner_2.tolist()
+corner_3 = corner_3.tolist()
+corner_4 = corner_4.tolist()
+
+
+corner1_x = np.asarray(df_x["Corner 1 x"])
+corner2_x = np.asarray(df_x["Corner 2 x"])
+corner3_x = np.asarray(df_x["Corner 3 x"])
+corner4_x = np.asarray(df_x["Corner 4 x"])
+corner1_y = np.asarray(df_y["Corner 1 y"])
+corner2_y = np.asarray(df_y["Corner 2 y"])
+corner3_y = np.asarray(df_y["Corner 3 y"])
+corner4_y = np.asarray(df_y["Corner 4 y"])
+plt.scatter(corner1_x,corner1_y)
+plt.scatter(corner2_x, corner2_y)
+plt.scatter(corner3_x, corner3_y)
+plt.scatter(corner4_x, corner4_y)
+# plt.show()
+
+threshold_length = np.linalg.norm(np.subtract(corner_1[0], corner_2[0]))
+#converting markerids to a list
+def id():
+	marker_ids.tolist()
+	ids = []
+	for i in range(0, len(marker_ids)):
+		ids.append(marker_ids[i][0])
+	return ids
+
+marker_id = id()
+
+
+# corner_1 = [[2285, 2648], [2002.0, 2652.0], [1463.0, 2418.0], [1732.0, 2410.0], [2290.0, 2399.0], [2007.0, 2400.0], [2016.0, 2164.0], [1734.0, 2163.0], [2292.0, 2151.0], [1472.0, 1915.0], [1741.0, 1903.0], [2007.0, 1894.0]]
+# corner_2 = [[2500, 2643], [2235.0, 2641.0], [1690.0, 2413.0], [1959.0, 2404.0], [2498.0, 2393.0], [2238.0, 2395.0], [2230.0, 2154.0], [1958.0, 2154.0], [2501.0, 2146.0], [1695.0, 1909.0], [1962.0, 1897.0], [2242.0, 1890.0]]
+# corner_3 = [[2496.0, 2844.0], [2231.0, 2860.0], [1685.0, 2619.0], [1955.0, 2613.0], [2499.0, 2584.0], [2237.0, 2603.0], [2226.0, 2348.0], [1959.0, 2363.0], [2497.0, 2338.0], [1691.0, 2113.0], [1961.0, 2103.0], [2238.0, 2098.0]]
+# corner_4 = [[2284.0, 2845.0], [2002.0, 2866.0], [1460.0, 2626.0], [1729.0, 2617.0], [2287.0, 2591.0], [2008.0, 2613.0], [2017.0, 2353.0], [1732.0, 2369.0], [2287.0, 2341.0], [1470.0, 2120.0], [1736.0, 2110.0], [2010.0, 2103.0]]
+# marker_id = [30,29,21,22, 24, 23, 17, 16, 18, 9, 10, 11]
+
+
+def compute_normal(corner_a, corner_b, cor1, cor2):
+	a = cor1[k]
+	b1 = cor2[k]
+	centre = np.add(corner_1[k], corner_2[k])
+	centre = np.add(centre, corner_3[k])
+	centre = ((np.add(centre, corner_4[k]))/4).tolist()
+	b = np.subtract(b1, a)
+	dx = b1[0] - a[0]
+	dy = b1[1] - a[1]
+	c = (np.add(a,b1))/2
+	d = [-dy, dx]
+	p = corner_a
+	q1 = corner_b
+	q = np.subtract(q1, p)
+	coeff_mat = [[d[0], -q[0]], [d[1], -q[1]]]
+	coeff_layers = [(p-c)[0], (p-c)[1]]
+	if (np.linalg.det(coeff_mat)!=0):
+		r, s = np.linalg.solve(coeff_mat, coeff_layers)
+	else:
+		return np.inf
+	if (0<=s<=1):
+		poi = p+s*q
+		return(np.linalg.norm(c - poi))
+	else:
+		return np.inf
+
+def nearest_marker(corn1, corn2):
+	dist = []
+	for i in range(0, len(corner_1)):
+		if (i==k):
+			for m in range(0,4):
+				dist.append(np.inf)
+			continue
+		marker = [corner_1[i], corner_2[i], corner_3[i], corner_4[i]]
+		for j in range(0,3):
+			dist.append(compute_normal(marker[j], marker[j+1], corn1, corn2))
+		dist.append(compute_normal(corner_4[i], corner_1[i], corn1, corn2))
+	if (min(dist) > 1.5 * threshold_length):
+		m = 1000
+	else:
+		m = marker_id[int(dist.index(min(dist))/4)]
+	return m, dist
+
+ids = []
+edge_bo = []
+edge_og = []
+edge_gr = []
+edge_rb = []
+for x in marker_id:
+	marker_to_compute = x
+	k = marker_id.index(marker_to_compute)
+	m1, dist1 = nearest_marker(corner_1, corner_2)
+	m2, dist2 = nearest_marker(corner_2, corner_3)
+	m3, dist3 = nearest_marker(corner_3, corner_4)
+	m4, dist4 = nearest_marker(corner_4, corner_1)
+	if (m1 == m3):
+		if (min(dist1) < min(dist3)):
+			m3 = 1000
+		elif(min(dist1) == min(dist3)):
+			m1 = 1000
+			m3 = 1000
+		else:
+			m1 = 1000
+	if (m2 == m4):
+		if (min(dist2) < min(dist4)):
+			m4 = 1000
+		elif(min(dist2) == min(dist4)):
+			m2 = 1000
+			m4 = 1000
+		else:
+			m2 = 1000
+	ids.append(x)
+	edge_bo.append(m1)
+	edge_og.append(m2)
+	edge_gr.append(m3)
+	edge_rb.append(m4)
