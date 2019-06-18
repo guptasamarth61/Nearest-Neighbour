@@ -1,0 +1,106 @@
+import cv2
+import matplotlib
+from cv2 import aruco
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+
+aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)
+
+def img_show():																		
+	fig = plt.figure()
+	img = aruco.drawMarker(aruco_dict,5, 200,1)
+	plt.imshow(img, cmap = matplotlib.cm.gray, interpolation = "nearest")
+	#plt.show()
+
+#img_show()
+
+
+
+
+def compute_corners(image):
+	test_pic = cv2.imread(image)
+	#plt.imshow(test_pic)
+	#plt.show()
+
+	#converting image to greyish scale
+	test_gray = cv2.cvtColor(test_pic, cv2.COLOR_RGB2GRAY)
+	plt.imshow(test_gray)
+	#plt.show()
+	markercorners, markerids, rejected_img_points = aruco.detectMarkers(test_gray, aruco_dict, parameters = aruco.DetectorParameters_create())
+	# print(markerids[1])
+	# print(markercorners[1][0])
+	#print(rejected_img_points)
+
+	test_with_markers = aruco.drawDetectedMarkers(test_pic, markercorners, markerids)
+	plt.imshow(test_with_markers)
+	#plt.show()
+	length = len(markerids)
+	corner1 = []
+	corner2 = []
+	corner3 = []
+	corner4 = []
+
+	markercorners = np.asarray(markercorners)
+	for i in range(0, length):
+	 	corner1.append(markercorners[i][0][0])
+	 	corner2.append(markercorners[i][0][1])
+	 	corner3.append(markercorners[i][0][2])
+	 	corner4.append(markercorners[i][0][3])
+
+	corner1 = np.asarray(corner1)
+	corner2 = np.asarray(corner2)
+	corner3 = np.asarray(corner3)
+	corner4 = np.asarray(corner4)
+	# print(corner1[0])
+	values_dict_x = {"Corner 1 x": corner1[:,0],  "Corner 2 x": corner2[:,0],  "Corner 3 x": corner3[:,0], 
+					"Corner 4 x": corner4[:,0], "ID": markerids[:,0]}
+	values_dict_y = {"Corner 1 y": corner1[:,1],"Corner 2 y": corner2[:,1],"Corner 3 y": corner3[:,1],"Corner 4 y": corner4[:,1], 
+					"ID": markerids[:,0]}
+	df_x1 = pd.DataFrame(values_dict_x)
+	df_y1 = pd.DataFrame(values_dict_y)
+	df_x1 = df_x1.set_index("ID")
+	df_y1 = df_y1.set_index("ID")
+	df_x1_mean = df_x1.mean(axis = 1)
+	df_y1_mean = df_y1.mean(axis = 1)
+	return df_x1, df_y1, df_x1_mean, df_y1_mean, corner1, corner2, corner3, corner4, markerids
+
+
+df_x, df_y, df_x_mean, df_y_mean, corner_1, corner_2, corner_3, corner_4, marker_ids = compute_corners("IMG_0032.jpg")
+# print(marker_ids.tolist())
+# plt.scatter(np.asarray(df_x_mean), np.asarray(df_y_mean))
+# plt.show()
+
+corner_1 = corner_1.tolist()
+corner_2 = corner_2.tolist()
+corner_3 = corner_3.tolist()
+corner_4 = corner_4.tolist()
+
+corner1_x = np.asarray(df_x["Corner 1 x"])
+corner2_x = np.asarray(df_x["Corner 2 x"])
+corner3_x = np.asarray(df_x["Corner 3 x"])
+corner4_x = np.asarray(df_x["Corner 4 x"])
+corner1_y = np.asarray(df_y["Corner 1 y"])
+corner2_y = np.asarray(df_y["Corner 2 y"])
+corner3_y = np.asarray(df_y["Corner 3 y"])
+corner4_y = np.asarray(df_y["Corner 4 y"])
+plt.scatter(corner1_x,corner1_y)
+plt.scatter(corner2_x, corner2_y)
+plt.scatter(corner3_x, corner3_y)
+plt.scatter(corner4_x, corner4_y)
+plt.show()
+
+# print(corner_1)
+# print(corner_2)
+# print(corner_3)
+# print(corner_4)
+
+
+#converting markerids to a list
+def id():
+	marker_ids.tolist()
+	ids = []
+	for i in range(0, len(marker_ids)):
+		ids.append(marker_ids[i][0])
+	return ids
