@@ -1,0 +1,86 @@
+import random
+import numpy as np
+import matplotlib.pyplot as plt
+
+rows = 3
+columns = 2
+markers = 9
+encoded_points = []
+simulation = []
+
+# returns the cyclic permutations with inversions
+def cyclic_permutations(word):
+	anagram1 = word
+	anagram2 = str(word[1]) + str(word[2]) + str(word[3]) + str(word[0])
+	anagram3 = str(word[2]) + str(word[3]) + str(word[0]) + str(word[1])
+	anagram4 = str(word[3]) + str(word[0]) + str(word[1]) + str(word[2])
+	reversed1 = anagram1[::-1]
+	reversed2 = anagram2[::-1]
+	reversed3 = anagram3[::-1]
+	reversed4 = anagram4[::-1]
+	anagrams = [anagram1, anagram2, anagram3, anagram4, reversed1, reversed2, reversed3, reversed4]
+	return anagrams
+
+
+for l in range(0,50):
+	graph = np.zeros((rows, columns), dtype = 'int')
+	for i in range(0,rows):
+		for j in range (0,columns):
+			graph[i][j] = random.randint(0,markers)
+
+	# print(graph)
+
+	words_used = []
+	for i in range(1,rows):
+		for j in range(1, columns):
+			x = str(graph[i-1][j-1]) + str(graph[i-1][j]) + str(graph[i][j]) + str(graph[i][j-1])
+			if ((x in words_used) == False):
+				for y in cyclic_permutations(x):
+					words_used.append(y)
+			else:
+				for k in range(0, 10):
+					graph[i][j] = k
+					x = str(graph[i-1][j-1]) + str(graph[i-1][j]) + str(graph[i][j]) + str(graph[i][j-1])
+					anagrams_x = cyclic_permutations(x)
+					for word in anagrams_x:
+						if ((word in words_used) == False):
+							error = 0
+						else:
+							error = 1
+							break
+					if (error == 0):
+						for y in cyclic_permutations(x):
+							words_used.append(y)
+						break
+
+
+	encoded_points.append(len(words_used[0::8]))
+	simulation.append(l)
+	if (encoded_points[l] == ((rows-1) * (columns-1))):
+		break			
+
+
+print(words_used[0::8])
+print("No of simulations", l+1)
+print(graph)
+# print("Points encoded", len(words_used)/8)
+# print("Points left", (((rows-1) * (columns-1)) - len(words_used[0::8])))
+# plt.plot(simulation, encoded_points)
+# plt.grid()
+# plt.show()
+
+# consistency_check
+anagrams_used = []
+def check_for_consistency(z):
+	for i in range(1, np.shape(z)[0]):
+		for j in range(1, np.shape(z)[1]):
+			x = str(graph[i-1][j-1]) + str(graph[i-1][j]) + str(graph[i][j]) + str(graph[i][j-1])
+			for y in cyclic_permutations(x):
+				anagrams_used.append(y)
+	if ((len(set(anagrams_used))) == (len(anagrams_used))):
+		return True
+	else:
+		print(anagrams_used)
+		print(set(anagrams_used))
+		return False
+print(check_for_consistency(graph))
